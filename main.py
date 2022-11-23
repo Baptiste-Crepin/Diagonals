@@ -111,75 +111,132 @@ def updateBoard(board, player, i, j):
     return board
 
 
+def full_diag(board, i, j, direction):
+    """
+    return True si la diagonale direction (0= \  1= /)  qui comporte la case (i, j) est remplie, dans le cas contraire return False
+    """
+    # empeche de compter le coin
+    if ((i == 0 and i == n-1) or (j == 0 and j == n-1)):
+        return False
+
+    last_i, last_j, iteration = i, j, 0
+    if direction == 0:
+        if ((i == 0 and j == n-1) or (i == n-1 and j == 0)):
+            return False
+
+        #print("bas droite")
+        while ((i+iteration < n) and (j+iteration < n)):
+            if board[i+iteration][j+iteration] == 0:
+                return False
+            last_i, last_j = i-iteration, j-iteration
+            iteration += 1
+
+        #print("haut gauche")
+        last_i, last_j, iteration = i, j, -1
+
+        while ((i+iteration >= 0) and (j+iteration >= 0)):
+            if board[i+iteration][j+iteration] == 0:
+                return False
+            last_i, last_j = i-iteration, j-iteration
+            iteration -= 1
+
+        return True
+
+    if direction == 1:
+        # empeche de compter le coin
+        if ((i == 0 and j == 0) or (i == n-1 and j == n-1)):
+            return False
+
+        #print("bas gauche")
+        while ((i-iteration >= 0) and (j+iteration < n)):
+            if board[i-iteration][j+iteration] == 0:
+                return False
+            last_i, last_j = i-iteration, j-iteration
+            iteration += 1
+
+        #print("haut droite")
+        last_i, last_j, iteration = i, j, 0
+
+        while ((i+iteration < n) and (j-iteration >= 0)):
+            if board[i+iteration][j-iteration] == 0:
+                return False
+            last_i, last_j = i-iteration, j-iteration
+            iteration += 1
+
+        return True
+
+
 def updateScore(board, n, player, score, i, j):
     """
-    Une procédure "updateScore(board, n, player, score, i, j)" où l'on suppose ici que i et j sont les coordonnées d'une case où le joueur player vient de poser un pion. Cette procédure met à jour le score du joueur player.
+    # Une procédure "updateScore(board, n, player, score, i, j)" où l'on suppose ici que i et j sont les coordonnées d'une case où le joueur player vient de poser un pion. Cette procédure met à jour le score du joueur player.
     """
     b = 1
+    print(full_diag(board, i, j, 0))
+    print(full_diag(board, i, j, 1))
+    if full_diag(board, i, j, 0):
+        print("A")
+        # bas droite
+        while (possibleSquare(board, n, i+b, j+b) and (board[i+b][j+b] == player)):
+            if ((i == 0 and j == 0) or ((i+1)+b == n and (j+1)+b == n)):
+                break
 
-    # bas droite
-    while (possibleSquare(board, n, i+b, j+b) and (board[i+b][j+b] == player)):
-        if ((i == 0 and j == 0) or ((i+1)+b == n and (j+1)+b == n)):
-            break
+            print("bas droite")
+            if b == 1:
+                score[player-1] += 2
+            else:
+                score[player-1] += 1
+            b += 1
+        b = 1
 
-        print("bas droite")
-        if b == 1:
-            score[player-1] += 2
-        else:
-            score[player-1] += 1
-        b += 1
-    b = 1
+        # haut gauche
+        while (possibleSquare(board, n, i-b, j-b) and (board[i-b][j-b] == player)):
 
-    # bas gauche
-    while (possibleSquare(board, n,  i+b, j-b) and (board[i+b][j-b] == player)):
-        if (((j+1) == n and i == 0) or (j-b == 0 and (i+1)+b == n)):
-            break
+            if ((i == n and j == n) or (i-b == 0 and j-b == 0)):
+                break
 
-        print("bas gauche")
-        if b == 1:
-            score[player-1] += 2
-        else:
-            score[player-1] += 1
-        b += 1
-    b = 1
+            print("haut gauche")
+            if b == 1:
+                score[player-1] += 2
+            else:
+                score[player-1] += 1
+            b += 1
 
-    # haut droite
-    while (possibleSquare(board, n, i-b, j+b) and (board[i-b][j+b] == player)):
-        if (i+1 == n and j == 0) or ((i-b == 0 and (j+1)+b == n)):
-            break
+    if full_diag(board, i, j, 1):
+        print('B')
+        # bas gauche
+        while (possibleSquare(board, n,  i+b, j-b) and (board[i+b][j-b] == player)):
+            if (((j+1) == n and i == 0) or (j-b == 0 and (i+1)+b == n)):
+                break
 
-        print("haut droite")
-        if b == 1:
-            score[player-1] += 2
-        else:
-            score[player-1] += 1
-        b += 1
+            print("bas gauche")
+            if b == 1:
+                score[player-1] += 2
+            else:
+                score[player-1] += 1
+            b += 1
+        b = 1
 
-    b = 1
+        # haut droite
+        while (possibleSquare(board, n, i-b, j+b) and (board[i-b][j+b] == player)):
+            if (i+1 == n and j == 0) or ((i-b == 0 and (j+1)+b == n)):
+                break
 
-    # haut gauche
-    while (possibleSquare(board, n, i-b, j-b) and (board[i-b][j-b] == player)):
-
-        if ((i == n and j == n) or (i-b == 0 and j-b == 0)):
-            break
-
-        print("haut gauche")
-        if b == 1:
-            score[player-1] += 2
-        else:
-            score[player-1] += 1
-        b += 1
-    b = 1
+            print("haut droite")
+            if b == 1:
+                score[player-1] += 2
+            else:
+                score[player-1] += 1
+            b += 1
 
 
 def again(board, n):
     """
     Une fonction "again(board, n)" qui retourne True si le joueur courant peut poser un pion sur le plateau et False sinon.
-    >>> board = [[1, 2, 1], [1, 2, 1], [1, 2, 1]]
-    >>> again(board, 3)
+    >> > board = [[1, 2, 1], [1, 2, 1], [1, 2, 1]]
+    >> > again(board, 3)
     False
-    >>> board = [[1, 2, 1], [1, 0, 1], [1, 2, 1]]
-    >>> again(board, 3)
+    >> > board = [[1, 2, 1], [1, 0, 1], [1, 2, 1]]
+    >> > again(board, 3)
     True
     """
     for row in board:
@@ -192,11 +249,11 @@ def again(board, n):
 def win(score):
     """
     Une fonction "win(score)" qui retourne une chaîne de caractères indiquant l'issue de la partie.
-    >>> win((5, 3))
+    >> > win((5, 3))
     Player 1 wins
-    >>> win((7, 9))
+    >> > win((7, 9))
     Player 2 wins
-    >>> win((15, 32))
+    >> > win((15, 32))
     Player 2 wins
     """
     if score[0] > score[1]:
@@ -209,6 +266,8 @@ def diagonals(n):
     """
     Un programme principal "diagonals(n)" qui utilisera les sous-programmes précédents(et d'autres si besoin est) afin de permettre à deux joueurs de disputer une partie complète sur un plateau de jeu de n cases sur n cases.
     """
+    # TODO diagonals
+    pass
 
 
 if __name__ == "__main__":
@@ -221,9 +280,11 @@ if __name__ == "__main__":
     displayBoard(board, n)
     displayScore(score)
 
-    for i in range(5):
+    for i in range(15):
         selectedRow, selectedColumn = selectSquare(board, n)
         updateBoard(board, 1, selectedRow, selectedColumn)
         displayBoard(board, n)
         updateScore(board, n, 1, score, selectedRow, selectedColumn)
         displayScore(score)
+        print("|", full_diag(board, selectedRow, selectedColumn, 0))
+        print("/", full_diag(board, selectedRow, selectedColumn, 1))
