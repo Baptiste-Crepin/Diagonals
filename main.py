@@ -93,6 +93,10 @@ def selectSquare(board, n):
     return selectedRow, selectedColumn
 
 
+def otherplayer(player):
+    return 2 if player == 1 else 1
+
+
 def updateBoard(board, player, i, j):
     """
     Une procédure "updateBoard(board, player, i, j)" où l'on suppose ici que i et j sont les coordonnées d'une case où le joueur player peut poser un pion. Cette procédure réalise cette pose.
@@ -115,59 +119,79 @@ def full_diag(board, i, j, direction):
     """
     return True si la diagonale direction (0= \  1= /)  qui comporte la case (i, j) est remplie, dans le cas contraire return False
     """
-    diag1 = []
-    diag2 = []
-    last_i, last_j, iteration = i, j, 0
+    iteration = 1
     if direction == 0:
         # empeche de compter le coin
         if ((i == 0 and j == n-1) or (i == n-1 and j == 0)):
             return False
 
-        #print("bas droite")
+        while i >= 0 or j >= 0:
+            i -= 1
+            j -= 1
+
+        # print("bas droite")
         while ((i+iteration < n) and (j+iteration < n)):
             if board[i+iteration][j+iteration] == 0:
                 return False
-            diag1.append(board[i+iteration][j+iteration])
-            last_i, last_j = i-iteration, j-iteration
+
             iteration += 1
-
-        #print("haut gauche")
-        last_i, last_j, iteration = i, j, 0
-
-        while ((i-iteration >= 0) and (j-iteration >= 0)):
-            if board[i-iteration][j-iteration] == 0:
-                return False
-            diag2.append(board[i-iteration][j-iteration])
-            last_i, last_j = i-iteration, j-iteration
-            iteration += 1
-
-        print("haut gauche", diag2, "bas droite", diag1)
-        diag2.pop()
-        print(diag2 + diag1)
-        return True
 
     if direction == 1:
         # empeche de compter le coin
         if ((i == 0 and j == 0) or (i == n-1 and j == n-1)):
             return False
 
-        #print("bas gauche")
-        while ((i-iteration >= 0) and (j+iteration < n)):
-            if board[i-iteration][j+iteration] == 0:
-                return False
-            last_i, last_j = i-iteration, j-iteration
-            iteration += 1
+        while (i >= 0 and j < n):
+            i -= 1
+            j += 1
 
-        #print("haut droite")
-        last_i, last_j, iteration = i, j, 0
-
+        # print("bas gauche")
         while ((i+iteration < n) and (j-iteration >= 0)):
+            # print(i, j, i+iteration, j-iteration)
             if board[i+iteration][j-iteration] == 0:
                 return False
-            last_i, last_j = i-iteration, j-iteration
+
             iteration += 1
 
-        return True
+    return True
+
+
+def contentDiag(board, i, j, direction):
+    iteration = 1
+    diags = []
+    if direction == 0:
+        # empeche de compter le coin
+        if ((i == 0 and j == n-1) or (i == n-1 and j == 0)):
+            return False
+
+        # place en haut a gauche
+        while i >= 0 or j >= 0:
+            i -= 1
+            j -= 1
+
+        # vers bas droite \
+        while ((i+iteration < n) and (j+iteration < n)):
+            # print(i+iteration, j+iteration)
+            diags.append(board[i+iteration][j+iteration])
+            iteration += 1
+
+    if direction == 1:
+        # empeche de compter le coin
+        if ((i == 0 and j == 0) or (i == n-1 and j == n-1)):
+            return False
+
+        # place en haut a droite
+        while (i >= 0 and j < n):
+            i -= 1
+            j += 1
+
+        # vers bas gauche
+        while ((i+iteration < n) and (j-iteration >= 0)):
+            # print(i, j, i+iteration, j-iteration)
+            diags.append(board[i+iteration][j-iteration])
+            iteration += 1
+
+    return diags
 
 
 def updateScore(board, n, player, score, i, j):
@@ -175,53 +199,31 @@ def updateScore(board, n, player, score, i, j):
     # Une procédure "updateScore(board, n, player, score, i, j)" où l'on suppose ici que i et j sont les coordonnées d'une case où le joueur player vient de poser un pion. Cette procédure met à jour le score du joueur player.
     """
     b = 1
-    print(full_diag(board, i, j, 0))
-    print(full_diag(board, i, j, 1))
-    if full_diag(board, i, j, 0):
-        print("A")
-        # bas droite
-        while (possibleSquare(board, n, i+b, j+b) and (board[i+b][j+b] == player)):
+    diags = [contentDiag(board, i, j, 0), contentDiag(board, i, j, 1)]
+    # print(full_diag(board, i, j, 0))
+    # print(full_diag(board, i, j, 1))
+    # print(diags)
 
-            print("bas droite")
-            if b == 1:
-                score[player-1] += 2
-            else:
-                score[player-1] += 1
-            b += 1
-        b = 1
+    for direction in range(2):
+        print("direction", direction, i, j, full_diag(board, i, j, direction))
 
-        # haut gauche
-        while (possibleSquare(board, n, i-b, j-b) and (board[i-b][j-b] == player)):
+        if full_diag(board, i, j, direction):
+            last = -1
 
-            print("haut gauche")
-            if b == 1:
-                score[player-1] += 2
-            else:
-                score[player-1] += 1
-            b += 1
+            for index, item in enumerate(diags[direction]):
+                if index+1 < len(diags[direction]):
+                    if item == diags[direction][index+1] and item == player:
+                        print("+")
+                        score[player-1] += 1
+                    if (index != 0) and (item == last) and (diags[direction][index+1] == otherplayer(player)):
+                        score[player-1] += 1
 
-    if full_diag(board, i, j, 1):
-        print('B')
-        # bas gauche
-        while (possibleSquare(board, n,  i+b, j-b) and (board[i+b][j-b] == player)):
+                # to calculate the last one
+                if index == len(diags[direction])-1 and item == last and item == player:
+                    score[player-1] += 1
 
-            print("bas gauche")
-            if b == 1:
-                score[player-1] += 2
-            else:
-                score[player-1] += 1
-            b += 1
-        b = 1
-
-        # haut droite
-        while (possibleSquare(board, n, i-b, j+b) and (board[i-b][j+b] == player)):
-
-            print("haut droite")
-            if b == 1:
-                score[player-1] += 2
-            else:
-                score[player-1] += 1
-            b += 1
+                print(index, last, item)
+                last = item
 
 
 def again(board, n):
@@ -275,37 +277,18 @@ if __name__ == "__main__":
     displayBoard(board, n)
     displayScore(score)
 
-    updateBoard(board, 0, 3, 3)
+    updateBoard(board, 2, 3, 3)
+    updateBoard(board, 2, 4, 4)
+    updateBoard(board, 2, 4, 0)
+    updateBoard(board, 2, 0, 4)
+    updateBoard(board, 2, 1, 3)
+    updateBoard(board, 2, 1, 1)
+    updateBoard(board, 2, 0, 0)
     for i in range(15):
         selectedRow, selectedColumn = selectSquare(board, n)
         updateBoard(board, 1, selectedRow, selectedColumn)
         displayBoard(board, n)
-        updateScore(board, n, 1, score, selectedRow, selectedColumn)
+        updateScore(board, n, 2, score, selectedRow, selectedColumn)
         displayScore(score)
         print("\\", full_diag(board, selectedRow, selectedColumn, 0))
         print("/", full_diag(board, selectedRow, selectedColumn, 1))
-
-
-"""
-#TODO: resolve those problem
-problem : 
-
-1 | O . . . .
-2 | . O . . .
-3 | . . X . .
-4 | . . . O .
-5 | . . . . O
-
-last input : (5, 5)
-Current score: 4 vs 0
-
-1 | O . . . .
-2 | . O . . .
-3 | . . O . .
-4 | . . . X .
-5 | . . . . O
-
-last input : (1, 1)
-Current score: 3 vs 0
-
-"""
