@@ -115,7 +115,7 @@ def updateBoard(board, player, i, j):
     return board
 
 
-def full_diag(board, i, j, direction):
+def full_diag(board, n, i, j, direction):
     """
     return True si la diagonale direction (0= \  1= /)  qui comporte la case (i, j) est remplie, dans le cas contraire return False
     """
@@ -125,11 +125,11 @@ def full_diag(board, i, j, direction):
         if ((i == 0 and j == n-1) or (i == n-1 and j == 0)):
             return False
 
-        while i >= 0 or j >= 0:
+        while i > 0 and j > 0:
             i -= 1
             j -= 1
 
-        # print("bas droite")
+        # vers bas droite
         while ((i+iteration < n) and (j+iteration < n)):
             if board[i+iteration][j+iteration] == 0:
                 return False
@@ -145,9 +145,8 @@ def full_diag(board, i, j, direction):
             i -= 1
             j += 1
 
-        # print("bas gauche")
+        # vers bas gauche
         while ((i+iteration < n) and (j-iteration >= 0)):
-            # print(i, j, i+iteration, j-iteration)
             if board[i+iteration][j-iteration] == 0:
                 return False
 
@@ -155,9 +154,8 @@ def full_diag(board, i, j, direction):
 
     return True
 
-
-def contentDiag(board, i, j, direction):
-    iteration = 1
+def contentDiag(board, n, i, j, direction):
+    iteration = 0
     diags = []
     if direction == 0:
         # empeche de compter le coin
@@ -165,13 +163,13 @@ def contentDiag(board, i, j, direction):
             return False
 
         # place en haut a gauche
-        while i >= 0 or j >= 0:
+        while i > 0 and j > 0:
             i -= 1
             j -= 1
 
         # vers bas droite \
         while ((i+iteration < n) and (j+iteration < n)):
-            # print(i+iteration, j+iteration)
+            #print(i+iteration, j+iteration, n)
             diags.append(board[i+iteration][j+iteration])
             iteration += 1
 
@@ -181,13 +179,12 @@ def contentDiag(board, i, j, direction):
             return False
 
         # place en haut a droite
-        while (i >= 0 and j < n):
+        while (i > 0 and j < n-1):
             i -= 1
             j += 1
 
         # vers bas gauche
         while ((i+iteration < n) and (j-iteration >= 0)):
-            # print(i, j, i+iteration, j-iteration)
             diags.append(board[i+iteration][j-iteration])
             iteration += 1
 
@@ -199,15 +196,15 @@ def updateScore(board, n, player, score, i, j):
     # Une procédure "updateScore(board, n, player, score, i, j)" où l'on suppose ici que i et j sont les coordonnées d'une case où le joueur player vient de poser un pion. Cette procédure met à jour le score du joueur player.
     """
     b = 1
-    diags = [contentDiag(board, i, j, 0), contentDiag(board, i, j, 1)]
-    # print(full_diag(board, i, j, 0))
-    # print(full_diag(board, i, j, 1))
+    diags = [contentDiag(board, n, i, j, 0), contentDiag(board, n, i, j, 1)]
+    # print(full_diag(board,n, i, j, 0))
+    # print(full_diag(board,n, i, j, 1))
     # print(diags)
 
     for direction in range(2):
-        print("direction", direction, i, j, full_diag(board, i, j, direction))
-
-        if full_diag(board, i, j, direction):
+        print(full_diag(board, n, i, j, direction), direction)
+        print(i, j)
+        if full_diag(board, n, i, j, direction):
             last = -1
 
             for index, item in enumerate(diags[direction]):
@@ -215,14 +212,13 @@ def updateScore(board, n, player, score, i, j):
                     if item == diags[direction][index+1] and item == player:
                         print("+")
                         score[player-1] += 1
-                    if (index != 0) and (item == last) and (diags[direction][index+1] == otherplayer(player)):
+                    elif (index != 0) and (item == last) and (diags[direction][index+1] == otherplayer(player)):
                         score[player-1] += 1
 
                 # to calculate the last one
                 if index == len(diags[direction])-1 and item == last and item == player:
                     score[player-1] += 1
 
-                print(index, last, item)
                 last = item
 
 
@@ -253,6 +249,10 @@ def win(score):
     >> > win((15, 32))
     Player 2 wins
     """
+    print(score)
+    if score[0] == score[1]:
+        print("it's a draw")
+        return
     if score[0] > score[1]:
         print("Player 1 wins")
         return
@@ -263,32 +263,26 @@ def diagonals(n):
     """
     Un programme principal "diagonals(n)" qui utilisera les sous-programmes précédents(et d'autres si besoin est) afin de permettre à deux joueurs de disputer une partie complète sur un plateau de jeu de n cases sur n cases.
     """
-    # TODO diagonals
-    pass
+    player = 1
+    board = newBoard(n)
+    score = [0, 0]
+    displayBoard(board, n)
+    displayScore(score)
+
+    while again(board, n):
+        selectedRow, selectedColumn = selectSquare(board, n)
+        updateBoard(board, player, selectedRow, selectedColumn)
+        displayBoard(board, n)
+        updateScore(board, n, player, score, selectedRow, selectedColumn)
+        displayScore(score)
+
+        player = otherplayer(player)
+    win(score)
 
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose=True)
     doctest.testmod(verbose=False)
-    board = newBoard(5)
-    n = len(board)
-    score = [0, 0]
-    displayBoard(board, n)
-    displayScore(score)
 
-    updateBoard(board, 2, 3, 3)
-    updateBoard(board, 2, 4, 4)
-    updateBoard(board, 2, 4, 0)
-    updateBoard(board, 2, 0, 4)
-    updateBoard(board, 2, 1, 3)
-    updateBoard(board, 2, 1, 1)
-    updateBoard(board, 2, 0, 0)
-    for i in range(15):
-        selectedRow, selectedColumn = selectSquare(board, n)
-        updateBoard(board, 1, selectedRow, selectedColumn)
-        displayBoard(board, n)
-        updateScore(board, n, 2, score, selectedRow, selectedColumn)
-        displayScore(score)
-        print("\\", full_diag(board, selectedRow, selectedColumn, 0))
-        print("/", full_diag(board, selectedRow, selectedColumn, 1))
+    diagonals(int(input("Entrez la taille de la grille")))
